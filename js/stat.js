@@ -1,67 +1,101 @@
 'use strict';
 
-const CLOUD_WIDTH = 420;
-const CLOUD_HEIGHT = 270;
-const CLOUD_X = 100;
-const CLOUD_Y = 10;
-const GAP = 20;
-const BAR_HEIGHT = 150;
-const BAR_WIDTH = 40;
-const BAR_GAP = 50;
-const FONT_SIZE = 16;
-const TEXT_WIDTH = 40;
-const barHeight = CLOUD_HEIGHT - GAP - TEXT_WIDTH - GAP;
-const PLAYER_COLOR = `rgba(255, 0, 0, 1)`;
+var settings = {
+  heightCloud: 270,
+  widthCloud: 420,
+  x: 100,
+  y: 10,
+  cloudStep: 10,
 
-// функция для отрисовки белого окна и тени
-let renderCloud = (ctx, x, y, color) => {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, CLOUD_WIDTH, CLOUD_HEIGHT);
+  stepColumn: 50,
+  heightColumn: 150,
+  widthColumn: 40,
+  lineHeight: 20,
+
+  offset: {
+    top: 15,
+    left: 50,
+    bottom: 20
+  },
+
+  userColor: 'rgba(255, 0, 0, 1)',
+  allColor: 'hsl(240, 100%, ',
+
+  title: {
+    content: [
+      'Ура вы победили!',
+      'Список результатов:'
+    ],
+    color: 'rgba(0, 0, 0, 0.7)'
+  },
+
+  colorCloud: [
+    'rgba(0, 0, 0, 0.7)',
+    'rgba(255, 255, 255, 1)'
+  ]
 };
 
-// функция для нахождения максимального результата времени
-const getMaxElement = (arr) => {
-  let maxElement = arr[0];
+function renderCloud(ctx, obj) {
+  obj.colorCloud.forEach(function (item, index) {
+    ctx.fillStyle = item;
+    ctx.fillRect(obj.x - obj.cloudStep * index, obj.y - obj.cloudStep * index, obj.widthCloud, obj.heightCloud);
+  })
+}
 
-  // Если на какой-нибудь из итераций цикла текущий элемент окажется больше максимального, заменим им максимальный элемент и продолжим поиски. Так, после работы алгоритма, в переменной maxElement будет находиться элемент больше которого в массиве не оказалось никакого элемента.
+function getMaxValue (arr) {
+  var max = -Infinity;
 
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > maxElement) {
-      maxElement = arr[i];
+  arr.forEach(function (item) {
+    if(item > max) {
+      max = item;
     }
-  }
-  return maxElement;
+  });
+  return Math.round(max);
 };
 
-window.renderStatistics = (ctx, players, times) => {
-  renderCloud(ctx, CLOUD_X + CLOUD_Y, CLOUD_Y * 2, `rgba(0, 0, 0, 0.7)`);
-  renderCloud(ctx, CLOUD_X, CLOUD_Y, `#fff`);
+function getHistogrammPercent (value, height) {
+  return height / getMaxValue(value);
+}
 
-  // текст
-  ctx.fillStyle = `#000`;
-  ctx.font = `16px PT Mono`;
-  ctx.fillText(`Ура вы победили!`, CLOUD_X + TEXT_WIDTH + CLOUD_Y, CLOUD_Y + 15);
-  ctx.fillText(`Список результатов:`, CLOUD_X + TEXT_WIDTH + CLOUD_Y, CLOUD_Y + GAP + 10);
+function getColorUser (value, obj) {
+  return value === 'Вы' ?  obj.userColor : obj.allColor + getRandomValue(0, 100) + '%)';
+}
 
-  const maxTime = getMaxElement(times);
-
-  // функция для возврата рандомного цвета
-  const getRandomNumber = (max) => {
-    return Math.floor(Math.random() * Math.floor(max));
-  };
-
-  const getRandomColor = () => {
-    return `hsl(244,` + getRandomNumber(100) + `%, 50%)`;
-  };
-
-  // цикл для отрисовки каждой гистограммы
-  for (let i = 0; i < players.length; i++) {
-    ctx.fillStyle = `#000`;
-    ctx.fillText(Math.round(times[i]), CLOUD_X + CLOUD_Y + GAP + (BAR_GAP + BAR_WIDTH) * i, (CLOUD_X - FONT_SIZE + GAP) + (BAR_HEIGHT - (barHeight * times[i]) / maxTime) - 5);
-    ctx.fillText(players[i], CLOUD_X + CLOUD_Y + GAP + (BAR_GAP + BAR_WIDTH) * i, CLOUD_X + BAR_HEIGHT + GAP);
-
-    ctx.fillStyle = players[i] === `Вы` ? PLAYER_COLOR : getRandomColor();
-    ctx.fillRect(CLOUD_X + CLOUD_Y + GAP + (BAR_GAP + BAR_WIDTH) * i, (CLOUD_X - FONT_SIZE + GAP) + (BAR_HEIGHT - (barHeight * times[i]) / maxTime),
-        BAR_WIDTH, (barHeight * times[i]) / maxTime);
+function getRandomValue (min, max) {
+  if(max === undefined) {
+    max = min;
+    min = 0;
   }
+  return Math.round( min - 0.5 + Math.random() * (max - min + 1));
+}
+
+function renderColumn (ctx, name, time, index, obj, percent) {
+  ctx.fillStyle = getColorUser(name, obj);
+  console.log((obj.height + obj.y) - (obj.offset.bottom + obj.lineHeight * 2 + obj.heightColumn));
+  ctx.fillText(name, 150 + (obj.widthColumn + obj.stepColumn) * index, (obj.heightCloud + obj.y) - (obj.offset.bottom + obj.lineHeight * 2 + obj.heightColumn));
+  ctx.fillRect( 150 + (obj.widthColumn + obj.stepColumn) * index, (obj.heightCloud + obj.y) - (obj.offset.bottom + obj.lineHeight), obj.widthColumn , -time * percent );
+  ctx.fillText(Math.floor(time), 150 + (obj.widthColumn + obj.stepColumn) * index, (obj.heightCloud + obj.y) - (obj.offset.bottom));
+}
+
+function renderHistogram (ctx, userNames, userTimes, obj) {
+  var stepPercent = getHistogrammPercent(userTimes, obj.heightColumn);
+
+  for (var i = 0; i < userNames.length; i++) {
+    renderColumn(ctx, userNames[i], userTimes[i], i, obj, stepPercent)
+  }
+}
+
+function renderTitle (ctx, obj) {
+  ctx.fillStyle = obj.title.color;
+
+  obj.title.content.forEach(function (item, index) {
+    ctx.fillText(item, obj.x + obj.offset.left , obj.y + obj.offset.top + obj.lineHeight * index);
+  })
+}
+
+window.renderStatistics = function (ctx, names, times) {
+  renderCloud(ctx, settings);
+
+  renderTitle(ctx, settings);
+  renderHistogram(ctx, names, times, settings);
 };
