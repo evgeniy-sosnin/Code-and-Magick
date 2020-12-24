@@ -148,19 +148,19 @@
   function onChangeCoatColor() {
     var color = settings.color.coat[getRandomValue(settings.color.coat.length - 1)];
     wizardCoat.style.fill = color;
-    setup.querySelector('[name]="coat-color"').value = color;
+    setup.querySelector('input[name="coat-color"]').value = color;
   }
 
   function onChangeEyesColor() {
     var color = settings.color.eyes[getRandomValue(settings.color.eyes.length - 1)];
     wizardEyes.style.fill = color;
-    setup.querySelector('[name]="eyes-color"').value = color;
+    setup.querySelector('input[name="eyes-color"]').value = color;
   }
 
   function onChangeFireballColor() {
     var color = settings.color.fireball[getRandomValue(settings.color.fireball.length - 1)];
     setupFireballWrap.style.background = color;
-    setup.querySelector('[name]="fireball-color"').value = color;
+    setup.querySelector('input[name="fireball-color"]').value = color;
   }
 
   wizardCoat.addEventListener('click', onChangeCoatColor);
