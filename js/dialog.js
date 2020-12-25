@@ -2,6 +2,7 @@
 (function () {
   var setup = document.querySelector('.setup');
   var upload = setup.querySelector('.upload');
+
   upload.addEventListener('mousedown', function (evt) {
     evt.preventDefault();
 
