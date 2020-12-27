@@ -1,5 +1,5 @@
 'use strict';
-(function (){
+(function () {
   window.settings = {
     count: 4,
     name: [
