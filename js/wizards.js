@@ -8,8 +8,11 @@
 
   var setupSimilar = document.querySelector('.setup-similar');
   var setupSimilarList = document.querySelector('.setup-similar-list');
-
   var setupWizardForm = setup.querySelector('.setup-wizard-form');
+
+  var currentCoatColor;
+  var currentEyesColor;
+  var wizards = [];
 
   function renderWizard(obj) {
     var wizardTemplate = similarWizardTemplate.cloneNode(true);
@@ -21,13 +24,61 @@
 
   function fillWizards(arr) {
     var fragment = document.createDocumentFragment();
-    arr.forEach(function (item, index) {
-      if (index < 4) {
-        fragment.appendChild(renderWizard(item));
-      }
-    });
-
+    console.log(arr);
+    for(var i = 0; i < 4; i++) {
+      fragment.appendChild(renderWizard(arr[i]))
+    }
     setupSimilarList.appendChild(fragment);
+  }
+
+  function getRank(wizard) {
+    var rank = 0;
+
+    if (wizard.colorCoat === currentCoatColor) {
+      rank += 2;
+    }
+
+    if (wizard.colorEyes === currentEyesColor) {
+      rank += 1;
+    }
+
+    return rank;
+  }
+
+  function namesComparator(left, right) {
+    if (left > right) {
+      return 1;
+    } else if (left < right) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
+
+  function updateWizards() {
+    setupSimilarList.textContent = '';
+    fillWizards(wizards.sort(function (left, right) {
+      var rankDiff =  getRank(right) - getRank(left);
+      if(rankDiff === 0) {
+        rankDiff = namesComparator(left.name, right.name);
+      }
+      return rankDiff;
+    }));
+  }
+
+  window.wizard.onEyesChange = window.debounce(function (color) {
+    currentEyesColor = color;
+    updateWizards();
+  });
+
+  window.wizard.onCoatChange = window.debounce(function (color) {
+    currentCoatColor = color;
+    updateWizards();
+  });
+
+  function successUpload(data) {
+    wizards = data;
+    updateWizards();
   }
 
   function errorMessage(str) {
@@ -53,7 +104,7 @@
 
     setup.classList.remove('hidden');
     document.addEventListener('keydown', onCloseSetupEscEvent);
-    window.backend.load(fillWizards, errorMessage);
+    window.backend.load(successUpload, errorMessage);
   }
 
   setupWizardForm.addEventListener('submit', function (evt) {
