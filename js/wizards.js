@@ -24,7 +24,6 @@
 
   function fillWizards(arr) {
     var fragment = document.createDocumentFragment();
-    console.log(arr);
     for(var i = 0; i < 4; i++) {
       fragment.appendChild(renderWizard(arr[i]))
     }
